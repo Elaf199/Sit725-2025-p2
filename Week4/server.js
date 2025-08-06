@@ -1,36 +1,43 @@
-var express = require("express")
-var mongoose = require("mongoose")
-var app = express()
-app.use(express.static(__dirname+'/public'))
+var express = require("express");
+var mongoose = require("mongoose");
+var app = express();
+app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-const cardList = [
-{
-title: "Kitten 2",
-image: "images/kitten-2.jpg",
-link: "About Kitten 2",
-desciption: "Demo desciption about kitten 2"
-},
-{
-title: "Kitten 3",
-image: "images/kitten-3.jpg",
-link: "About Kitten 3",
-desciption: "Demo desciption about kitten 3"
-}
-]
-mongoose.connect('<RE', {
-useNewUrlParser: true,
-useUnifiedTopology: true,
-});
-mongoose.connection.on('connected', () => {
-console.log('Connected to MongoDB!');
+
+// 4. Connect to MongoDB Atlas
+mongoose.connect('mongodb+srv://elafuser:Ee0503381491-@cluster0.q8zuxdw.mongodb.net/myprojectDB?retryWrites=true&w=majority&appName=Cluster0', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-app.get('/api/projects',(req,res) => {
-res.json({statusCode: 200, data: cardList, message:"Success"})
-})
+mongoose.connection.on('connected', () => {
+  console.log('Connected to MongoDB Atlas!');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+const ProjectSchema = new mongoose.Schema({
+  title: String,
+  image: String,
+  link: String,
+  description: String
+});
+
+const Project = mongoose.model('Project', ProjectSchema);
+
+app.get('/api/projects', async (req, res) => {
+  try {
+    const projects = await Project.find({});
+    res.json({ statusCode: 200, data: projects, message: "Success" });
+  } catch (error) {
+    res.json({ statusCode: 500, message: "Error fetching projects", error });
+  }
+});
 
 var port = process.env.port || 3000;
-app.listen(port,()=>{
-console.log("App listening to: "+port)
-})
+app.listen(port, () => {
+  console.log("App listening on port: " + port);
+});
